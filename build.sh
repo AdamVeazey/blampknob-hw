@@ -41,7 +41,17 @@ build_pdf() {
 
 build_bom() {
     echo "==> Exporting BOM..."
-    kicad-cli sch export bom --output "output/bom/${PROJECT_NAME}-BOM.csv" "${PROJECT_NAME}.kicad_sch"
+
+    kicad-cli sch export bom \
+      --output "output/bom/${PROJECT_NAME}-BOM.csv" \
+      --fields "QUANTITY,Reference,Value,Footprint,MFG PN,Description" \
+      --labels "Qty,Designators,Value,Footprint,MPN,Description" \
+      --group-by "Value,Footprint,MFG PN" \
+      --ref-delimiter ", " \
+      --ref-range-delimiter "-" \
+      --exclude-dnp \
+      "${PROJECT_NAME}.kicad_sch"
+
 }
 
 build_gerbers() {
