@@ -918,7 +918,7 @@
 					)
 				)
 			)
-			(property "Description" "Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(property "Description" "Connector Header Through Hole, Right Angle 5 position 0.079\" (2.00mm)"
 				(at 0.508 9.398 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2425,7 +2425,7 @@
 				)
 			)
 		)
-		(property "Description" "Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)"
+		(property "Description" "Connector Header Through Hole, Right Angle 5 position 0.079\" (2.00mm)"
 			(at 82.042 79.502 0)
 			(hide yes)
 			(show_name no)
