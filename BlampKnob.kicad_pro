@@ -61,7 +61,7 @@
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
           "min_clearance": 0.0,
-          "min_island_area": 9.99999999996,
+          "min_island_area": 9.9999993548,
           "min_thickness": 0.254,
           "pad_connection": 1,
           "remove_islands": 0,
@@ -258,7 +258,7 @@
       "internal_id": "",
       "mfg": "",
       "mpn": "",
-      "sch_revision": "A"
+      "sch_revision": "${B_REV}"
     },
     "layer_pairs": [],
     "layer_presets": [],
@@ -714,7 +714,11 @@
       "Root"
     ]
   ],
-  "text_variables": {},
+  "text_variables": {
+    "B_COMPANY": "VZ",
+    "B_REV": "A",
+    "B_TITLE": "Blamp Knob"
+  },
   "tuning_profiles": {
     "meta": {
       "version": 0
