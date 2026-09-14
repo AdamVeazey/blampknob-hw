@@ -10,29 +10,11 @@ if [ ! -f "${PRO_FILE[0]}" ]; then
 fi
 
 PROJECT_NAME="${PRO_FILE[0]%.kicad_pro}"
-PANEL_NAME="${PROJECT_NAME}Panel"
 
-echo "==> Building ${PROJECT_NAME}..."
+echo "==> Building Single Board: ${PROJECT_NAME}..."
 
 # Setup directories
-mkdir -p output/gerbers output/bom output/pdf
-
-build_panel() {
-    echo "==> Generating Panel (${PANEL_NAME}) with KiKit..."
-    docker run --rm \
-      --user $(id -u):$(id -g) \
-      -v $(pwd):/work \
-      -w /work \
-      yaqwsx/kikit \
-      panelize \
-        --layout 'grid; rows: 2; cols: 7; space: 0mm; rotation: 180deg; alternation: rows;' \
-        --cuts 'type: vcuts;' \
-        --framing 'type: railstb; width: 5mm;' \
-        --tooling 'type: 4hole; hoffset: 5mm; voffset: 2.5mm; size: 2mm;' \
-        --fiducials 'type: 3fid; hoffset: 12mm; voffset: 2.5mm; coppersize: 1mm; opening: 2mm;' \
-        --post 'copperfill: true;' \
-        "${PROJECT_NAME}.kicad_pcb" "output/${PANEL_NAME}.kicad_pcb"
-}
+mkdir -p output/gerbers output/assembly output/pdf
 
 build_pdf() {
     echo "==> Exporting Schematic PDF..."
@@ -41,9 +23,8 @@ build_pdf() {
 
 build_bom() {
     echo "==> Exporting BOM..."
-
     kicad-cli sch export bom \
-      --output "output/bom/${PROJECT_NAME}-BOM.csv" \
+      --output "output/assembly/${PROJECT_NAME}-BOM.csv" \
       --fields "QUANTITY,Reference,Value,Footprint,MFG PN,Description" \
       --labels "Qty,Designators,Value,Footprint,MPN,Description" \
       --group-by "Value,Footprint,MFG PN" \
@@ -51,16 +32,26 @@ build_bom() {
       --ref-range-delimiter "-" \
       --exclude-dnp \
       "${PROJECT_NAME}.kicad_sch"
+}
 
+build_pos() {
+    echo "==> Exporting Assembly Positions (POS)..."
+    kicad-cli pcb export pos \
+      --output "output/assembly/${PROJECT_NAME}-POS.csv" \
+      --format csv \
+      --units mm \
+      --side both \
+      --use-drill-file-origin \
+      "${PROJECT_NAME}.kicad_pcb"
 }
 
 build_gerbers() {
-    echo "==> Exporting Panel Gerbers & Drills..."
-    kicad-cli pcb export gerbers --output output/gerbers/ "output/${PANEL_NAME}.kicad_pcb"
-    kicad-cli pcb export drill --output output/gerbers/ "output/${PANEL_NAME}.kicad_pcb"
+    echo "==> Exporting Gerbers & Drills..."
+    kicad-cli pcb export gerbers --output output/gerbers/ "${PROJECT_NAME}.kicad_pcb"
+    kicad-cli pcb export drill --output output/gerbers/ "${PROJECT_NAME}.kicad_pcb"
 
     echo "==> Zipping Gerber Package..."
-    (cd output/gerbers && zip -r "../${PANEL_NAME}-Gerbers.zip" . > /dev/null)
+    (cd output/gerbers && zip -r "../${PROJECT_NAME}-Gerbers.zip" . > /dev/null)
 }
 
 clean() {
@@ -70,22 +61,27 @@ clean() {
 
 # Command Routing
 case "$1" in
-    panel)      build_panel ;;
     pdf)        build_pdf ;;
     bom)        build_bom ;;
-    gerbers)    build_panel; build_gerbers ;; # Gerbers require panel to exist
+    pos)        build_pos ;;
+    gerbers)    build_gerbers ;;
     clean)      clean ;;
     all|"")
         clean
-        mkdir -p output/gerbers output/bom output/pdf
-        build_panel
+        mkdir -p output/gerbers output/assembly output/pdf
+
         build_pdf
         build_bom
+        build_pos
         build_gerbers
+
+        echo "==> Zipping Assembly Package..."
+        (cd output/assembly && zip -r "../${PROJECT_NAME}-Assembly.zip" . > /dev/null)
+
         echo "==> Success! All build artifacts compiled in output/"
         ;;
     *)
-        echo "Usage: $0 {panel|pdf|bom|gerbers|clean|all}"
+        echo "Usage: $0 {pdf|bom|pos|gerbers|clean|all}"
         exit 1
         ;;
 esac
